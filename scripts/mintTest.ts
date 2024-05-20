@@ -7,11 +7,11 @@ export async function run(provider: NetworkProvider) {
 
      //console.log("content", content)
 
-    // const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQCAlCCwQycR6yCjPd6hlEQNZamPeLhFm-359f5cHObBWYXu")
-    // ));
-
     const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQB1ygejEd6q3HQ6I2BqGXCr-hCcMl8AmkH8nuBn-yQoszCW")
     ));
+
+    // const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQB1ygejEd6q3HQ6I2BqGXCr-hCcMl8AmkH8nuBn-yQoszCW")
+    // ));
 
     //
 
@@ -28,12 +28,12 @@ export async function run(provider: NetworkProvider) {
         },
         {
             $$type:"Mint",
-            amount: BigInt("100000000000000"),
+            amount: BigInt("1000000000000000"),
             //receiver:Address.parse("UQAU_LmEvt-EpjoE3D15HTZK_9_FwPHDC7fwHyL0aYajxEH7")
 
             //receiver:Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R")
 
-            receiver:Address.parse("EQALuB62y0HtUdlxwhjdK7__IhJtW_9eviKM05EaA9RTqRP3")
+            receiver:Address.parse("EQA7FMeOtsJujtG44-8NunC0Xuw5D_UZoC_4RGr9jhIjJtRq")
         }
     );
 

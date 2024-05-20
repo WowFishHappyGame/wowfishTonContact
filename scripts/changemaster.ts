@@ -14,11 +14,11 @@ export async function run(provider: NetworkProvider) {
     await wowfishBank.send(
         provider.sender(),
         {
-            value: toNano('0.2'),
+            value: toNano('0.02'),
         },
         {
             $$type: 'ChangeMaster',
-            newMaster: Address.parse("UQAu6nL4g_if9LUHCBoYSvflAWybZJPym7G52JT2Mg7XCLiU"),
+            newMaster: Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R"),
         }
     );
 

@@ -38,25 +38,23 @@ contract WowfishBank with OwnableTransferable, Deployable {
 
         require(sender() == self.master, "Access denied");
        
-        let dayDelta: Int= (( now() - self.deployTime) / (24*60*60)) + 1;
-        let availableAmount: Int = dayDelta * self._dayWithdrawAmount;
-        self.transferAmount = availableAmount - self._withdrawedAmount;
-
-        require(self._amount >=  self.transferAmount, "Insufficient balance");
+        let availableAmount: Int = self.availableAmount();
+        
+        self.transferAmount = msg.amount;
+        require(self._amount >=  self.transferAmount && availableAmount >= self.transferAmount, "Insufficient balance");
         require( self.transferAmount >0, "Insufficient withdraw");
 
         self._queryId = msg.queryId;
-
         send(SendParameters{
-                to: msg.selfWalletAddress, 
+                to: msg.bankWallet, 
                 value: 0, 
                 bounce: true,
                 mode: SendRemainingValue,
                 body: TokenTransfer{ 
                     queryId: self._queryId,
                     amount:  self.transferAmount,
-                    destination: self.master,
-                    response_destination: myAddress(),
+                    destination: msg.toWalletAddress,
+                    response_destination: msg.toWalletAddress,
                     custom_payload: emptyCell(),
                     forward_ton_amount: 1000000,
                     forward_payload: beginCell().
@@ -86,10 +84,18 @@ contract WowfishBank with OwnableTransferable, Deployable {
     get fun daily(): Int{
         return self._dayWithdrawAmount;
     }
+
+    get fun availableAmount(): Int{
+        let dayDelta: Int= (( now() - self.deployTime) / (24*60*60)) + 1;
+        let availableAmount: Int = dayDelta * self._dayWithdrawAmount;
+        return availableAmount - self._withdrawedAmount;
+    }
 }
 
 message Withdraw{
-    selfWalletAddress: Address;
+    bankWallet: Address;
+    toWalletAddress: Address;
+    amount: Int as uint256;
     queryId: Int as uint64;
 }
 

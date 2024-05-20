@@ -7,11 +7,11 @@ export async function run(provider: NetworkProvider) {
 
     //prod
     // const token = "EQAKnvanaCL64KvUiiia6cHCXbiGHrscZbHM57wvKSMvMPdx"
-    // const bank = "EQD2EuwrGsmqn6un68fUhiX111vPnQew8aTTkOu02Q9jcPm4"
+    // const bank = "EQDF5ybglQv_DuVA0oYfqq7tvXdPVuBrJ1y5aPFWDtRoykui"
 
     //test
     const token = "EQB1ygejEd6q3HQ6I2BqGXCr-hCcMl8AmkH8nuBn-yQoszCW"
-    const bank = "EQALuB62y0HtUdlxwhjdK7__IhJtW_9eviKM05EaA9RTqRP3"
+    const bank = "EQDNAaP1phTF4zdOv3kM1PPIPGnnQ3rfroWNlR6ql9QjwYYA"
     
 
     const jetton =  new JettonMaster(Address.parse(token))
@@ -33,7 +33,7 @@ export async function run(provider: NetworkProvider) {
     await wowfishBank.send(
         provider.sender(),
         {
-            value: toNano('0.2'),
+            value: toNano('0.5'),
         },
         {
             $$type: 'Withdraw',

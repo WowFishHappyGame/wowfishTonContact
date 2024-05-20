@@ -1,10 +1,10 @@
 import { Address, toNano } from '@ton/core';
 import { NetworkProvider } from '@ton/blueprint';
-import { WowFish } from '../wrappers/WowFish';
+import { InfrasRouter } from '../wrappers/InfrasRouter';
 
 export async function run(provider: NetworkProvider) {
-    const wowfish = provider.open(await WowFish.fromInit());
-    await wowfish.send(
+    const router = provider.open(await InfrasRouter.fromInit());
+    await router.send(
         provider.sender(),
         {
             value: toNano('0.05'),
@@ -15,8 +15,8 @@ export async function run(provider: NetworkProvider) {
         }
     );
 
-    await provider.waitForDeploy(wowfish.address);
+    await provider.waitForDeploy(router.address);
     
-    //console.log("wow ", wowfishBank.address)
+    console.log("router ", router.address)
     // run methods on `wowfishBank`
 }
