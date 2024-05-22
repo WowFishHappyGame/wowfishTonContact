@@ -33,7 +33,7 @@ export async function run(provider: NetworkProvider) {
 
             //receiver:Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R")
 
-            receiver:Address.parse("EQA7FMeOtsJujtG44-8NunC0Xuw5D_UZoC_4RGr9jhIjJtRq")
+            receiver:Address.parse("EQBtoa9Jz8Qgm9gNm6jeP4S3dI-Nib5ngLAEwzXz9rRx2AJ7")
         }
     );
 

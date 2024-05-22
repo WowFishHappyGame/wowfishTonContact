@@ -44,8 +44,8 @@ contract WowFish with OwnableTransferable, Deployable {
                     amount:  amount,
                     destination: self.payableAddress,
                     response_destination: tokenNotification.from,
-                    custom_payload: emptyCell(),
-                    forward_ton_amount: 1000000,
+                    custom_payload: tokenNotification.forward_payload.asCell(),
+                    forward_ton_amount: 0,
                     forward_payload: beginCell().
                                     storeUint(0, 1).
                                     asSlice()

@@ -11,7 +11,8 @@ export async function run(provider: NetworkProvider) {
     const jetton_master = JettonMaster.create(Address.parse(token_address))
     
     const wowfishBank = provider.open(await WowfishBank.fromInit
-        (Address.parse("EQCUk2KRGefl92Tga6A--bR78Jhea2vTzJNQq5VNNz7TFUw0"), BigInt("41000000000000000")));
+        
+        (Address.parse("EQAEgWG-XAIx136Jf3tCsx856Sq-WA5oPbOkgH7TgYRmV6rZ"), BigInt("41000000000000000")));
     await wowfishBank.send(
         provider.sender(),
         {
