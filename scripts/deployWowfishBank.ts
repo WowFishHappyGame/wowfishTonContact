@@ -12,7 +12,7 @@ export async function run(provider: NetworkProvider) {
     
     const wowfishBank = provider.open(await WowfishBank.fromInit
         
-        (Address.parse("EQAEgWG-XAIx136Jf3tCsx856Sq-WA5oPbOkgH7TgYRmV6rZ"), BigInt("41000000000000000")));
+        (Address.parse("EQBWX3YRml6ba2g-oTXrLyyIhjAy9YolbSt5vgroHIlIIYob"), BigInt("41000000000000000")));
     await wowfishBank.send(
         provider.sender(),
         {

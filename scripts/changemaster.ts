@@ -5,7 +5,7 @@ import { NetworkProvider } from '@ton/blueprint';
 
 export async function run(provider: NetworkProvider) {
 
-    const bank = "EQALuB62y0HtUdlxwhjdK7__IhJtW_9eviKM05EaA9RTqRP3"
+    const bank = "EQD60P_ISLmoDnzzQ-EvehzA9hTEyFxyxnQ-HIx3hwFEZkbm"
     const wowfishBank = provider.open(WowfishBank.fromAddress(Address.parse(bank)));
     
    // console.log(await wowfishBank.getBalance())
@@ -18,7 +18,7 @@ export async function run(provider: NetworkProvider) {
         },
         {
             $$type: 'ChangeMaster',
-            newMaster: Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R"),
+            newMaster: Address.parse("EQCHvAxMlQeLmI6lFazfbYiYElesa3VazPSUsgktEH1Hh-_V"),
         }
     );
 

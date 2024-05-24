@@ -8,14 +8,28 @@ contract WowFish with OwnableTransferable, Deployable {
 
     bankAddress: Address;
     payableAddress: Address;
+
+    pub: Int;
+    nonceMap: map<Int, Int>;
     init() {
         self.owner = sender();
         self.bankAddress = newAddress(0, 0);
         self.payableAddress = newAddress(0, 0);
+        self.pub = 0;
+        self.nonceMap = emptyMap();
     }
 
     //用户提现
     receive( msg: UserWithdrawToken){
+        let nonceCheck: Int? = self.nonceMap.get(msg.nonce);
+        require(nonceCheck == null, "nonce repetion");
+
+        let hash: Int = beginCell().storeAddress(sender()).storeCoins(msg.amount).storeInt(msg.nonce, 64).endCell().hash();        
+        let check: Bool = checkSignature(hash, msg.signature, self.pub);
+        require(check, "signature error");
+
+        self.nonceMap.set(msg.nonce, 1);
+
         send(SendParameters{
                 to: self.bankAddress, 
                 value: context().value - self.withdrawFee, 
@@ -33,22 +47,18 @@ contract WowFish with OwnableTransferable, Deployable {
      //收到token，用户消费
     receive(tokenNotification: TokenNotification){
         //扣除手续费
-        let amount: Int = tokenNotification.amount * 90 / 100;
         send(SendParameters{
                 to: sender(), 
-                value: 0, 
+                value: context().value - self.withdrawFee,
                 bounce: true,
-                mode: SendRemainingValue,
                 body: TokenTransfer{ 
                     queryId: tokenNotification.queryId,
-                    amount:  amount,
+                    amount:  tokenNotification.amount,
                     destination: self.payableAddress,
                     response_destination: tokenNotification.from,
-                    custom_payload: tokenNotification.forward_payload.asCell(),
-                    forward_ton_amount: 0,
-                    forward_payload: beginCell().
-                                    storeUint(0, 1).
-                                    asSlice()
+                    custom_payload: emptyCell(),
+                    forward_ton_amount: 1000000,
+                    forward_payload: tokenNotification.forward_payload
                 }.toCell()
             });
     }
@@ -56,6 +66,10 @@ contract WowFish with OwnableTransferable, Deployable {
     //支出token
     receive(msg: TokenExcesses){
         
+    }
+
+    receive(msg: ChangePublic){
+        self.pub = msg.pub;
     }
 
     receive("withdraw") {
@@ -111,6 +125,8 @@ message UserWithdrawToken{
     bankWallet: Address;
     amount: Int as uint256;
     queryId: Int as uint64;
+    nonce: Int as uint64;
+    signature: Slice;
 }
 
 
@@ -126,6 +142,10 @@ message BankAddress{
 
 message PayableAddress{
     payableAddress: Address;
+}
+
+message ChangePublic{
+    pub: Int;
 }
 
 message Withdraw{

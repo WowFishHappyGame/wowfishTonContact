@@ -1,0 +1,10 @@
+{
+    "projects": [{
+        "name": "sample",
+        "path": "./contract/wowfish.tact",
+        "output": "./output",
+        "options":{
+            "debug": true
+        }
+    }]
+}
