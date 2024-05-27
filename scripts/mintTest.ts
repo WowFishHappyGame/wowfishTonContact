@@ -28,12 +28,12 @@ export async function run(provider: NetworkProvider) {
         },
         {
             $$type:"Mint",
-            amount: BigInt("1000000000000000"),
+            amount: BigInt("41000000000000000"),
             //receiver:Address.parse("UQAU_LmEvt-EpjoE3D15HTZK_9_FwPHDC7fwHyL0aYajxEH7")
 
             //receiver:Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R")
 
-            receiver:Address.parse("EQD60P_ISLmoDnzzQ-EvehzA9hTEyFxyxnQ-HIx3hwFEZkbm")
+            receiver:Address.parse("EQD3gdA-wuqipxnB3wcCLyvEbhPwh9T7L9Avyw-Db4HZxZ2p")
         }
     );
 

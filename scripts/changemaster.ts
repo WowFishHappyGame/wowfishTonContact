@@ -5,7 +5,7 @@ import { NetworkProvider } from '@ton/blueprint';
 
 export async function run(provider: NetworkProvider) {
 
-    const bank = "EQD60P_ISLmoDnzzQ-EvehzA9hTEyFxyxnQ-HIx3hwFEZkbm"
+    const bank = "EQD3gdA-wuqipxnB3wcCLyvEbhPwh9T7L9Avyw-Db4HZxZ2p"
     const wowfishBank = provider.open(WowfishBank.fromAddress(Address.parse(bank)));
     
    // console.log(await wowfishBank.getBalance())

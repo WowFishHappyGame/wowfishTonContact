@@ -1,16 +1,21 @@
 import "@stdlib/deploy";
 import "@stdlib/ownable";
 
+struct Cache {
+    to: Address;
+    amount: Int as int256;
+}
+
 contract WowfishBank with OwnableTransferable, Deployable {
     master: Address;
     deployTime: Int as uint32;
     const _dayWithdrawAmount : Int = 100000000000000;
     _withdrawedAmount: Int as uint256;
     _amount: Int as uint256;
-    _queryId: Int as uint64;
     owner: Address;
 
-    transferAmount: Int as uint256;
+
+    transferCache: map<Int, Cache>;
 
     init(master: Address, amount: Int) {
         self.owner = sender();
@@ -18,15 +23,24 @@ contract WowfishBank with OwnableTransferable, Deployable {
         self.deployTime = now(); //
         self._withdrawedAmount = 0;
         self._amount = amount;
-        self._queryId = 0;
-        self.transferAmount = 0;
+        self.transferCache = emptyMap();
     }
 
     receive(msg: TokenExcesses){
-        if(msg.queryId == self._queryId){
-            self._withdrawedAmount += self.transferAmount;
-            self._amount -= self.transferAmount;
-            self.transferAmount = 0;
+        let cache: Cache? = self.transferCache.get(msg.queryId);
+        if(cache != null){
+            self._withdrawedAmount += (cache!!).amount;
+            self._amount -= (cache!!).amount;
+
+            send(SendParameters{
+                to: (cache!!).to, 
+                value: 0,
+                bounce: false,
+                mode: SendRemainingValue + SendIgnoreErrors,
+                body: TokenExcesses{
+                    queryId: msg.queryId
+                }.toCell()
+            });
         }
     }
 
@@ -37,24 +51,30 @@ contract WowfishBank with OwnableTransferable, Deployable {
     receive(msg: Withdraw){
 
         require(sender() == self.master, "Access denied");
+
+        let queryIdCheck: Cache? = self.transferCache.get(msg.queryId);
+        require(queryIdCheck == null, "queryId repetion");
        
         let availableAmount: Int = self.availableAmount();
         
-        self.transferAmount = msg.amount;
-        require(self._amount >=  self.transferAmount && availableAmount >= self.transferAmount, "Insufficient balance");
-        require( self.transferAmount >0, "Insufficient withdraw");
+        require(self._amount >=   msg.amount && availableAmount >=  msg.amount, "Insufficient balance");
+        require( msg.amount >0, "Insufficient withdraw");
 
-        self._queryId = msg.queryId;
+        self.transferCache.set(msg.queryId, Cache{
+            to: msg.toWalletAddress,
+            amount: msg.amount
+        });
+
         send(SendParameters{
                 to: msg.bankWallet, 
                 value: 0, 
                 bounce: true,
                 mode: SendRemainingValue,
                 body: TokenTransfer{ 
-                    queryId: self._queryId,
-                    amount:  self.transferAmount,
+                    queryId:  msg.queryId,
+                    amount:  msg.amount,
                     destination: msg.toWalletAddress,
-                    response_destination: msg.toWalletAddress,
+                    response_destination: myAddress(),
                     custom_payload: emptyCell(),
                     forward_ton_amount: 1000000,
                     forward_payload: beginCell().
