@@ -11,11 +11,11 @@ contract WowFish with OwnableTransferable, Deployable {
 
     pub: Int;
     nonceMap: map<Int, Int>;
-    init() {
+    init(pub: Int) {
         self.owner = sender();
         self.bankAddress = newAddress(0, 0);
         self.payableAddress = newAddress(0, 0);
-        self.pub = 0;
+        self.pub = pub;
         self.nonceMap = emptyMap();
     }
 
@@ -69,6 +69,7 @@ contract WowFish with OwnableTransferable, Deployable {
     }
 
     receive(msg: ChangePublic){
+        require(sender() == self.owner, "Only deployer is allowed to withdraw");
         self.pub = msg.pub;
     }
 
