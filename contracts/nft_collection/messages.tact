@@ -14,6 +14,7 @@ message Mint{
     count: Int as uint32;
     price: Int as uint256;
     nonce: Int as uint64;
+    queryId: Int as uint64;
     signature: Slice;
 }
 

@@ -40,13 +40,13 @@ contract NftCollection with Deployable , OwnableTransferable{
     receive(m: Mint){
         let ctx: Context = context(); // get sender Info
         let msgValue: Int = ctx.value;
-        self.proveSignature(m.count, m.price, m.nonce, m.signature);
+        self.proveSignature(m.count, m.price, m.nonce, m.queryId, m.signature);
         require(msgValue >= m.price * m.count, "price limit");
         let tonBalanceBeforeMsg: Int = myBalance() - msgValue;
         let storageFee: Int = self.minTonsForStorage - min(tonBalanceBeforeMsg, self.minTonsForStorage);
         msgValue = msgValue - (storageFee + self.gasConsumption);
         repeat (m.count) {   
-            self.mint(ctx.sender, msgValue / m.count);
+            self.mint(ctx.sender, msgValue / m.count, m.queryId);
         }
     }
 
@@ -59,7 +59,7 @@ contract NftCollection with Deployable , OwnableTransferable{
     }
 
     // ===== Private Methods ===== //
-    fun mint(sender: Address, msgValue: Int) {
+    fun mint(sender: Address, msgValue: Int, queryId: Int) {
         require(now() < self.control.lastTime && self.next_item_index < self.control.maxCountInTime, "non-sequential NFTs");
         require(self.next_item_index >= 0 && self.next_item_index < self.maxCount, "non-sequential NFTs");
         let nft_init: StateInit = self.getNftItemInit(self.next_item_index);
@@ -69,7 +69,7 @@ contract NftCollection with Deployable , OwnableTransferable{
                 bounce: false,
                 mode: SendIgnoreErrors,
                 body: Transfer {
-                    query_id: 0,
+                    query_id: queryId,
                     new_owner: sender,
                     response_destination: self.owner,//value to owner
                     custom_payload: emptyCell(),
@@ -82,10 +82,11 @@ contract NftCollection with Deployable , OwnableTransferable{
         self.next_item_index = self.next_item_index + 1;
     }
 
-    fun proveSignature(count: Int, price: Int, nonce: Int, signature: Slice){
+    fun proveSignature(count: Int, price: Int, nonce: Int, queryID: Int, signature: Slice){
         let hash: Int = beginCell().storeAddress(sender()).storeSlice(
             self.nftType.asSlice()
-        ).storeInt(count, 32).storeCoins(price).storeInt(nonce, 64).endCell().hash();        
+        ).storeInt(count, 32).storeCoins(price).storeInt(queryID, 64).
+        storeInt(nonce, 64).endCell().hash();        
         let check: Bool = checkSignature(hash, signature, self.pub);
         let nonceCheck: Int? = self.nonceMap.get(nonce);
         require(nonceCheck == null, "nonce repetion");

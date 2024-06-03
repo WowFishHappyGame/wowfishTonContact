@@ -15,10 +15,10 @@ export async function run(provider: NetworkProvider) {
 
     const owner = provider.sender().address!
     //sr
-    //const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQD2z4QvkFKESVFDIIT5uUWwB7srPdmYMk8PoUynAfIHz2To")));
+    //const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQBC_ZJTMRBBGuY4fuHwd6YaK_tLUyQaX6cuW1MzEdqTDX8j")));
     
     //ssr
-    const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQAru3NVhkA-3kwb0y9SayCJdhzqNxFskBthQ4bq6RRGFEzD")));
+    const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQCCOG66QrMRLKRS_6-47UZmBS4hVW7WWShHJ7uWzVRcI9VB")));
     
     
     //100000000000
