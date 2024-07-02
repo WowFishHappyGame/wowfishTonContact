@@ -3,6 +3,11 @@ import { toNano ,Address, beginCell} from '@ton/core';
 import { NftCollection } from '../wrappers/NftCollection';
 import '@ton/test-utils';
 //import { ContractSystem } from "@tact-lang/emulator";
+import * as dotenv from 'dotenv';
+
+// 在测试文件开头加载 .env
+dotenv.config();
+
 
 describe('WowfishBank', () => {
     let blockchain: Blockchain;
@@ -16,6 +21,7 @@ describe('WowfishBank', () => {
         const string_first = "https://tan-glad-sailfish-119.mypinata.cloud/ipfs/QmZoxsp29V2iNJkyctwhVAC3YKNkxEuiK25bFbAHwe69JP/"; // Change to the content URL you prepared
         let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(string_first).endCell();
     
+        console.log("process.env.Key as string",process.env.Key as string)
         nft = blockchain.openContract(await NftCollection.fromInit(
             deployer.address, 
             newContent,

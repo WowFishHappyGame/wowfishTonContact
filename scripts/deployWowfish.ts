@@ -3,7 +3,8 @@ import { NetworkProvider } from '@ton/blueprint';
 import { WowFish } from '../wrappers/WowFish';
 
 export async function run(provider: NetworkProvider) {
-    const wowfish = provider.open(await WowFish.fromInit());
+    console.log("key: ", process.env.Key as string)
+    const wowfish = provider.open(await WowFish.fromInit(BigInt(process.env.Key as string)));
     await wowfish.send(
         provider.sender(),
         {
