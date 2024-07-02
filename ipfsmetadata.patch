@@ -1,0 +1,431 @@
+diff --git a/contracts/nft_collection/messages.tact b/contracts/nft_collection/messages.tact
+index 7454e1a..a9f59ad 100644
+--- a/contracts/nft_collection/messages.tact
++++ b/contracts/nft_collection/messages.tact
+@@ -22,8 +22,3 @@ message MintControl{
+     lastTime: Int as uint32;
+     maxCountInTime: Int as uint64;
+ }
+-
+-
+-message ChangePublic{
+-    pub: Int;
+-}
+\ No newline at end of file
+diff --git a/contracts/nft_collection/nft_collection.tact b/contracts/nft_collection/nft_collection.tact
+index f24aa09..63c6c1a 100644
+--- a/contracts/nft_collection/nft_collection.tact
++++ b/contracts/nft_collection/nft_collection.tact
+@@ -122,6 +122,23 @@ contract NftCollection with Deployable , OwnableTransferable{
+      receive(msg: ChangePublic){
+         require(sender() == self.owner, "Only deployer is allowed to withdraw");
+         self.pub = msg.pub;
++        let i: Int = 0;
++        while (i < self.next_item_index) {
++            let item: Address? = self.get_nft_address_by_index(i);
++            if( item != null)
++            {
++                send(SendParameters{
++                    to: item!!,
++                    value: 10000000,
++                    bounce: true,
++                    body: ChangePublic {
++                        pub: msg.pub
++                    }.toCell()
++                });
++            }
++           
++            i = i + 1;
++        }
+     }
+ 
+     // ------------------ Get Function  ------------------ //
+@@ -129,7 +146,7 @@ contract NftCollection with Deployable , OwnableTransferable{
+         let b: StringBuilder = beginString();
+         let collectionDataString: String = self.collection_content.asSlice().asString();
+         b.append(collectionDataString);
+-        b.append("collectionsr.json"); // You can changed this your self.
++        b.append("collection.json"); // You can changed this your self.
+         return CollectionData{
+             next_item_index: self.next_item_index, 
+             collection_content: b.toCell(), 
+@@ -143,7 +160,7 @@ contract NftCollection with Deployable , OwnableTransferable{
+     }
+ 
+     get fun getNftItemInit(item_index: Int): StateInit {
+-        return initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content);
++        return initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content, self.pub);
+     }
+     
+     get fun get_nft_content(index: Int, individual_content: Cell): Cell { 
+diff --git a/contracts/nft_item/messages.tact b/contracts/nft_item/messages.tact
+index 45d34e0..fc2ba7b 100644
+--- a/contracts/nft_item/messages.tact
++++ b/contracts/nft_item/messages.tact
+@@ -25,4 +25,14 @@ message(0x8b771735) ReportStaticData{
+     query_id: Int as uint64;
+     index_id: Int;
+     collection: Address;
+-}
+\ No newline at end of file
++}
++
++message UpdateNftContent { 
++    query_id: Int as uint64;
++    new_content: Cell;
++    signature: Slice;
++}
++
++message ChangePublic{
++    pub: Int;
++}
+diff --git a/contracts/nft_item/nft_item.tact b/contracts/nft_item/nft_item.tact
+index fdebc8e..7bfff75 100644
+--- a/contracts/nft_item/nft_item.tact
++++ b/contracts/nft_item/nft_item.tact
+@@ -9,15 +9,23 @@ contract NftItem {
+     collection_address: Address;
+     item_index: Int; 
+     owner: Address;
+-    individual_content: Cell;
+     is_initialized: Bool;
++    pub: Int;
++    metaData: Cell;
+ 
+-    init(collection_address: Address, item_index: Int, owner: Address, individual_content: Cell){
++    init(collection_address: Address, item_index: Int, owner: Address, individual_content: Cell, pub: Int){
+         self.collection_address = collection_address;
+         self.item_index = item_index;
+         self.owner = collection_address;
+-        self.individual_content = individual_content;
+         self.is_initialized = false;
++        self.pub = pub;
++
++        let b: StringBuilder = beginString();
++        let collectionData: String = individual_content.asSlice().asString();
++        b.append(collectionData);
++        b.append((self.item_index+1).toString());
++        b.append(".json");
++        self.metaData = b.toCell();
+     }
+ 
+     receive(msg: Transfer){
+@@ -82,20 +90,40 @@ contract NftItem {
+         });
+     }
+ 
++    receive(msg: UpdateNftContent) {
++        let ctx: Context = context();
++        
++        // Only Editor of the this NFT can edit it.
++        require(ctx.sender == self.owner, "access denied");
++
++        let hash: Int = beginCell().storeAddress(ctx.sender).storeInt(msg.query_id, 64).storeSlice(msg.new_content.asSlice()).endCell().hash();
++        let check: Bool = checkSignature(hash, msg.signature, self.pub);
++        require(check , "signature error");
++        self.metaData = msg.new_content;
++        send(SendParameters{
++                to: ctx.sender, 
++                value: 0,
++                bounce: false,
++                mode: SendRemainingValue + SendIgnoreErrors,
++                body: Excesses{
++                    query_id: msg.query_id
++                }.toCell()
++            });
++    }
++
++    receive(msg: ChangePublic){
++        require(sender() == self.collection_address, "Only collection_address is allowed to withdraw");
++        self.pub = msg.pub;
++    }
++
+     // --------- Get Function  --------- //
+     get fun get_nft_data(): GetNftData {
+-        let b: StringBuilder = beginString();
+-        let collectionData: String = self.individual_content.asSlice().asString();
+-        b.append(collectionData);
+-        b.append(self.item_index.toString());
+-        b.append(".json");
+-
+         return GetNftData {
+             is_initialized: self.is_initialized, 
+             index: self.item_index, 
+             collection_address: self.collection_address, 
+             owner_address: self.owner,
+-            individual_content: b.toCell()
++            individual_content: self.metaData
+         };
+     }
+ }
+diff --git a/package-lock.json b/package-lock.json
+index 2269790..0724723 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -9,6 +9,7 @@
+             "version": "0.0.1",
+             "dependencies": {
+                 "@orbs-network/ton-access": "^2.3.3",
++                "dotenv": "^16.4.5",
+                 "tonapi-sdk-js": "^1.0.2"
+             },
+             "devDependencies": {
+@@ -2311,9 +2312,8 @@
+         },
+         "node_modules/dotenv": {
+             "version": "16.4.5",
+-            "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.4.5.tgz",
++            "resolved": "https://registry.npmmirror.com/dotenv/-/dotenv-16.4.5.tgz",
+             "integrity": "sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==",
+-            "dev": true,
+             "engines": {
+                 "node": ">=12"
+             },
+@@ -7523,9 +7523,8 @@
+         },
+         "dotenv": {
+             "version": "16.4.5",
+-            "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.4.5.tgz",
+-            "integrity": "sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==",
+-            "dev": true
++            "resolved": "https://registry.npmmirror.com/dotenv/-/dotenv-16.4.5.tgz",
++            "integrity": "sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg=="
+         },
+         "electron-to-chromium": {
+             "version": "1.4.721",
+diff --git a/package.json b/package.json
+index 9e4c758..2efd71b 100644
+--- a/package.json
++++ b/package.json
+@@ -25,6 +25,7 @@
+     },
+     "dependencies": {
+         "@orbs-network/ton-access": "^2.3.3",
++        "dotenv": "^16.4.5",
+         "tonapi-sdk-js": "^1.0.2"
+     }
+ }
+diff --git a/scripts/deployNft.ts b/scripts/deployNft.ts
+index 0cd17ce..d317569 100644
+--- a/scripts/deployNft.ts
++++ b/scripts/deployNft.ts
+@@ -7,7 +7,7 @@ import { beginCell } from '@ton/core';
+ export async function run(provider: NetworkProvider) {
+     
+     const OFFCHAIN_CONTENT_PREFIX = 0x01;
+-    const string_first = "https://tan-glad-sailfish-119.mypinata.cloud/ipfs/QmYwzNq9WRGrJEjjPsK7tDgw4mohwLfhR3pgxK3pLnDJHF/"; // Change to the content URL you prepared
++    const string_first = "https://bafybeibcqw7uyh6ibbz2n6a3x6gnqcyqr6clbqhcqvarc4ofgal67weneq.ipfs.w3s.link/"; // Change to the content URL you prepared
+     let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(string_first).endCell();
+ 
+      
+@@ -21,9 +21,9 @@ export async function run(provider: NetworkProvider) {
+         denominator: 1000n,
+         destination: owner,
+         },
+-        100000n,
++        10000n,
+         BigInt(process.env.Key as string),
+-        "SSR"
++        "SR"
+     ));
+     //100000000000
+     //1000000100n
+diff --git a/scripts/deployWowfish.ts b/scripts/deployWowfish.ts
+index 0cbc665..cc94bc4 100644
+--- a/scripts/deployWowfish.ts
++++ b/scripts/deployWowfish.ts
+@@ -3,7 +3,7 @@ import { NetworkProvider } from '@ton/blueprint';
+ import { WowFish } from '../wrappers/WowFish';
+ 
+ export async function run(provider: NetworkProvider) {
+-    const wowfish = provider.open(await WowFish.fromInit());
++    const wowfish = provider.open(await WowFish.fromInit(BigInt(process.env.Key as string)));
+     await wowfish.send(
+         provider.sender(),
+         {
+diff --git a/scripts/setwowInfo.ts b/scripts/setwowInfo.ts
+index 99532b1..c0f75f1 100644
+--- a/scripts/setwowInfo.ts
++++ b/scripts/setwowInfo.ts
+@@ -4,30 +4,30 @@ import { WowFish } from '../wrappers/WowFish';
+ 
+ export async function run(provider: NetworkProvider) {
+     const wowfish = provider.open(await WowFish.fromAddress(
+-        Address.parse("EQCHvAxMlQeLmI6lFazfbYiYElesa3VazPSUsgktEH1Hh-_V")));
+-    await wowfish.send(
+-        provider.sender(),
+-        {
+-            value: toNano('0.05'),
+-        },
+-        {
+-            $$type: "BankAddress",
+-           bankAddress: Address.parse("EQD3gdA-wuqipxnB3wcCLyvEbhPwh9T7L9Avyw-Db4HZxZ2p")
+-        }
+-    );
+-
+-
++        Address.parse("EQBRqg2d_l-rdKX8tTiZykbUl9ApRVFmYZoW_LEgLSZaHho1")));
+     // await wowfish.send(
+     //     provider.sender(),
+     //     {
+     //         value: toNano('0.05'),
+     //     },
+     //     {
+-    //         $$type: "PayableAddress",
+-    //        payableAddress: Address.parse("0QCK1aD3YvDLjUverSfse5MFIPgsnD3xUrScc0rsB33mgmt2")
++    //         $$type: "BankAddress",
++    //        bankAddress: Address.parse("EQD3gdA-wuqipxnB3wcCLyvEbhPwh9T7L9Avyw-Db4HZxZ2p")
+     //     }
+     // );
+ 
++
++    await wowfish.send(
++        provider.sender(),
++        {
++            value: toNano('0.05'),
++        },
++        {
++            $$type: "PayableAddress",
++           payableAddress: Address.parse("UQAoS5sqlgCouZI7_4hLxG8gK9J6LZKb3KASmFUoUTy7dU7z")
++        }
++    );
++
+     // await wowfish.send(
+     //     provider.sender(),
+     //     {
+diff --git a/scripts/startSaleNft.ts b/scripts/startSaleNft.ts
+index 23111fb..9bc206f 100644
+--- a/scripts/startSaleNft.ts
++++ b/scripts/startSaleNft.ts
+@@ -15,11 +15,12 @@ export async function run(provider: NetworkProvider) {
+ 
+     const owner = provider.sender().address!
+     //sr
+-    //const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQBC_ZJTMRBBGuY4fuHwd6YaK_tLUyQaX6cuW1MzEdqTDX8j")));
++    //const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQD-TmY65EtkhqkkFI6H2bTHZebKOAo1zIC0Dd9yQq6Rb5BC")));
++    const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQDnPFU-AnT0OOaaMg4HdJuB8o3IKbUT5eyF3aPx3VNh4d7p")));
+     
+     //ssr
+-    const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQCCOG66QrMRLKRS_6-47UZmBS4hVW7WWShHJ7uWzVRcI9VB")));
+-    
++    //const jetton_token = provider.open(await NftCollection.fromAddress(Address.parse("EQCNvzMTVBDftZqaGWO9W2DDv-mSNJ5MuD7IPv6g7BI5wGd0")));
++
+     
+     //100000000000
+     //1000000100n
+@@ -31,8 +32,8 @@ export async function run(provider: NetworkProvider) {
+         },
+         {
+             $$type: "MintControl",
+-            lastTime: 1719736668n,
+-            maxCountInTime: 100n
++            lastTime: 1722268800n,
++            maxCountInTime: 1000n
+         }
+     );
+ 
+diff --git a/tests/WowfishNFT.spec.ts b/tests/WowfishNFT.spec.ts
+index dc0c61d..0232aa3 100644
+--- a/tests/WowfishNFT.spec.ts
++++ b/tests/WowfishNFT.spec.ts
+@@ -2,6 +2,7 @@ import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
+ import { toNano ,Address, beginCell} from '@ton/core';
+ import { NftCollection } from '../wrappers/NftCollection';
+ import '@ton/test-utils';
++import { NftItem } from '../build/NftCollection/tact_NftItem';
+ //import { ContractSystem } from "@tact-lang/emulator";
+ 
+ describe('WowfishBank', () => {
+@@ -16,6 +17,7 @@ describe('WowfishBank', () => {
+         const string_first = "https://tan-glad-sailfish-119.mypinata.cloud/ipfs/QmZoxsp29V2iNJkyctwhVAC3YKNkxEuiK25bFbAHwe69JP/"; // Change to the content URL you prepared
+         let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(string_first).endCell();
+     
++        console.log("process.env.Key", process.env.Key)
+         nft = blockchain.openContract(await NftCollection.fromInit(
+             deployer.address, 
+             newContent,
+@@ -26,7 +28,7 @@ describe('WowfishBank', () => {
+                 destination: deployer.address,
+             },
+             1000000n,
+-            BigInt(process.env.Key as string),
++            BigInt("0x0aeb404e3889b9e45fb8b7df9dda8f577c3f0d7a9f7b23dccacd95d5c58e12d9"),
+             "SR"
+         ));
+         const deployResult = await nft.send(
+@@ -68,7 +70,7 @@ describe('WowfishBank', () => {
+                 },
+                 {
+                     $$type: "MintControl",
+-                    lastTime: 1719736668n,
++                    lastTime: 1722310164n,
+                     maxCountInTime: 100n
+                 }
+         )
+@@ -106,8 +108,66 @@ describe('WowfishBank', () => {
+                 to: nft.address,
+                 success: true,
+             });
++
++            //upgrade
++            
++           const nftAddress = await nft.getGetNftAddressByIndex(0n)
++           const nftItem = NftItem.fromAddress(nftAddress!)
++           const item = blockchain.openContract(nftItem)
++           const upgradeRes = await item.send(
++                increaser2.getSender(),
++                {
++                    value: toNano('0.1')
++                },
++                {
++                    $$type: "UpdateNftContent",
++                    query_id:1719818724241685n,
++                    new_content: beginCell().storeBuffer(
++                        Buffer.from("https://bafkreicmjtsyz5llbegady24gllamtyz6hwdskn2rt3ecq2nubuzwxlblq.ipfs.w3s.link")
++                    ).endCell(),
++                    signature:beginCell().storeBuffer(
++                        Buffer.from("80597ea7cd858dfdae2c1d9dc26a3fca66fa5fdb7ffbd61845306c8441f3968e193ec89542811324f93e1292c81b775bfc39b97a11669ad1355ce5dc22fb840b", 'hex')
++                    ).endCell()
++                }
++            )
++
++            expect(upgradeRes.transactions).toHaveTransaction({
++                from: increaser2.address,
++                to: nftItem.address,
++                success: true,
++            });
++          
+     });
+ 
++    it("change", async ()=>{
++  
++        const change = await nft.send(
++            deployer.getSender(),
++            {
++                value: toNano('10'),
++            },
++            {
++                $$type: "ChangePublic",
++                pub: BigInt("0x0aeb404e3889b9e45fb8b7df9dda8f577c3f0d7a9f7b23dccacd95d5c58e12d8"),
++            }
++        );
++
++        expect(change.transactions).toHaveTransaction({
++            from: deployer.address,
++            to: nft.address,
++            success: true,
++        });
++
++
++        // const nftAddress = await nft.getGetNftAddressByIndex(0n)
++        // console.log("nft address",nftAddress )
++        // expect(change.transactions).toHaveTransaction({
++        //     from: nft.address,
++        //     to: nftAddress!!,
++        //     success: true,
++        // });
++    })
++
+     // it('withdraw test', async ()=>{
+ 
+     //     let system = await ContractSystem.create();

@@ -68,7 +68,7 @@ describe('WowfishBank', () => {
                 },
                 {
                     $$type: "MintControl",
-                    lastTime: 1719736668n,
+                    lastTime: 1722310164n,//befor7-30
                     maxCountInTime: 100n
                 }
         )
