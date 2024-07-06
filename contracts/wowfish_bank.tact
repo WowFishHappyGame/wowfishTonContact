@@ -1,5 +1,6 @@
 import "@stdlib/deploy";
 import "@stdlib/ownable";
+import "./message";
 
 struct Cache {
     to: Address;
@@ -14,56 +15,29 @@ contract WowfishBank with OwnableTransferable, Deployable {
     _amount: Int as uint256;
     owner: Address;
 
-
-    transferCache: map<Int, Cache>;
-
     init(master: Address, amount: Int) {
         self.owner = sender();
         self.master = master;
         self.deployTime = now(); //
         self._withdrawedAmount = 0;
         self._amount = amount;
-        self.transferCache = emptyMap();
     }
 
     receive(msg: TokenExcesses){
-        let cache: Cache? = self.transferCache.get(msg.queryId);
-        if(cache != null){
-            self._withdrawedAmount += (cache!!).amount;
-            self._amount -= (cache!!).amount;
-
-            send(SendParameters{
-                to: (cache!!).to, 
-                value: 0,
-                bounce: false,
-                mode: SendRemainingValue + SendIgnoreErrors,
-                body: TokenExcesses{
-                    queryId: msg.queryId
-                }.toCell()
-            });
-        }
     }
 
     receive(msg: TokenNotification){
-        
+        self._withdrawedAmount +=  msg.amount;
+        self._amount -= msg.amount;
     }
 
     receive(msg: Withdraw){
 
         require(sender() == self.master, "Access denied");
 
-        let queryIdCheck: Cache? = self.transferCache.get(msg.queryId);
-        require(queryIdCheck == null, "queryId repetion");
-       
         let availableAmount: Int = self.availableAmount();
-        
         require(self._amount >=   msg.amount && availableAmount >=  msg.amount, "Insufficient balance");
         require( msg.amount >0, "Insufficient withdraw");
-
-        self.transferCache.set(msg.queryId, Cache{
-            to: msg.toWalletAddress,
-            amount: msg.amount
-        });
 
         send(SendParameters{
                 to: msg.bankWallet, 
@@ -74,12 +48,10 @@ contract WowfishBank with OwnableTransferable, Deployable {
                     queryId:  msg.queryId,
                     amount:  msg.amount,
                     destination: msg.toWalletAddress,
-                    response_destination: myAddress(),
+                    response_destination: msg.toWalletAddress,
                     custom_payload: emptyCell(),
                     forward_ton_amount: 1000000,
-                    forward_payload: beginCell().
-                                    storeUint(0, 1).
-                                    asSlice()
+                    forward_payload: msg.payload
                 }.toCell()
             });
     }
@@ -112,36 +84,6 @@ contract WowfishBank with OwnableTransferable, Deployable {
     }
 }
 
-message Withdraw{
-    bankWallet: Address;
-    toWalletAddress: Address;
-    amount: Int as uint256;
-    queryId: Int as uint64;
-}
-
 message ChangeMaster{
     newMaster: Address;
-}
-
-
-message(0xf8a7ea5) TokenTransfer {
-    queryId: Int as uint64;
-    amount: Int as coins;
-    destination: Address;
-    response_destination: Address;
-    custom_payload: Cell?;
-    forward_ton_amount: Int as coins;
-    forward_payload: Slice as remaining; // Comment Text message when Transfer the jetton
-}
-
-
-message(0xd53276db) TokenExcesses {
-    queryId: Int as uint64;
-}
-
-message(0x7362d09c) TokenNotification {
-    queryId: Int as uint64;
-    amount: Int as coins;
-    from: Address;
-    forward_payload: Slice as remaining; // Comment Text message when Transfer the jetton 
 }

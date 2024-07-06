@@ -1,5 +1,6 @@
 import "@stdlib/deploy";
 import "@stdlib/ownable";
+import "./message";
 
 contract WowFish with OwnableTransferable, Deployable {
     owner: Address;
@@ -23,8 +24,13 @@ contract WowFish with OwnableTransferable, Deployable {
     receive( msg: UserWithdrawToken){
         let nonceCheck: Int? = self.nonceMap.get(msg.nonce);
         require(nonceCheck == null, "nonce repetion");
-
-        let hash: Int = beginCell().storeAddress(sender()).storeCoins(msg.amount).storeInt(msg.nonce, 64).endCell().hash();        
+        let hash: Int = beginCell()
+        .storeAddress(sender())
+        .storeCoins(msg.amount)
+        .storeInt(msg.nonce, 64)
+        .storeRef(msg.payload.asCell())
+        .endCell()
+        .hash();        
         let check: Bool = checkSignature(hash, msg.signature, self.pub);
         require(check, "signature error");
 
@@ -38,6 +44,7 @@ contract WowFish with OwnableTransferable, Deployable {
                     bankWallet: msg.bankWallet,
                     toWalletAddress: sender(),
                     amount: msg.amount,
+                    payload: msg.payload,
                     queryId: msg.queryId
                 }.toCell()
             });
@@ -83,27 +90,6 @@ contract WowFish with OwnableTransferable, Deployable {
         });
     }
 
-    receive(msg: WithdrawToken) {
-        require(sender() == self.owner, "Only deployer is allowed to withdraw");
-        send(SendParameters{
-                to:  msg.walletAddress,
-                value: 0, 
-                bounce: true,
-                mode: SendRemainingValue,
-                body: TokenTransfer{ 
-                    queryId: msg.queryId,
-                    amount:  msg.amount,
-                    destination: sender(),
-                    response_destination: sender(),
-                    custom_payload: emptyCell(),
-                    forward_ton_amount: 1000000,
-                    forward_payload: beginCell().
-                                    storeUint(0, 1).
-                                    asSlice()
-                }.toCell()
-            });
-    }
-
     receive(bank: BankAddress){
         self.bankAddress = bank.bankAddress;
     }
@@ -127,14 +113,8 @@ message UserWithdrawToken{
     amount: Int as uint256;
     queryId: Int as uint64;
     nonce: Int as uint64;
+    payload: Slice;
     signature: Slice;
-}
-
-
-message WithdrawToken{
-    queryId: Int as uint64;
-    walletAddress: Address;
-    amount: Int as uint256;
 }
 
 message BankAddress{
@@ -143,36 +123,4 @@ message BankAddress{
 
 message PayableAddress{
     payableAddress: Address;
-}
-
-message ChangePublic{
-    pub: Int;
-}
-
-message Withdraw{
-    bankWallet: Address;
-    toWalletAddress: Address;
-    amount: Int as uint256;
-    queryId: Int as uint64;
-}
-
-message(0xf8a7ea5) TokenTransfer {
-    queryId: Int as uint64;
-    amount: Int as coins;
-    destination: Address;
-    response_destination: Address;
-    custom_payload: Cell?;
-    forward_ton_amount: Int as coins;
-    forward_payload: Slice as remaining; // Comment Text message when Transfer the jetton
-}
-
-message(0x7362d09c) TokenNotification {
-    queryId: Int as uint64;
-    amount: Int as coins;
-    from: Address;
-    forward_payload: Slice as remaining; // Comment Text message when Transfer the jetton 
-}
-
-message(0xd53276db) TokenExcesses {
-    queryId: Int as uint64;
 }
