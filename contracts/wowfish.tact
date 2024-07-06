@@ -28,11 +28,11 @@ contract WowFish with OwnableTransferable, Deployable {
         .storeAddress(sender())
         .storeCoins(msg.amount)
         .storeInt(msg.nonce, 64)
-        .storeRef(msg.payload.asCell())
+        .storeSlice(msg.payload)
         .endCell()
         .hash();        
         let check: Bool = checkSignature(hash, msg.signature, self.pub);
-        require(check, "signature error");
+       require(check, "signature error");
 
         self.nonceMap.set(msg.nonce, 1);
 
@@ -44,8 +44,7 @@ contract WowFish with OwnableTransferable, Deployable {
                     bankWallet: msg.bankWallet,
                     toWalletAddress: sender(),
                     amount: msg.amount,
-                    payload: msg.payload,
-                    queryId: msg.queryId
+                    payload: msg.payload
                 }.toCell()
             });
 
@@ -110,11 +109,10 @@ contract WowFish with OwnableTransferable, Deployable {
 
 message UserWithdrawToken{
     bankWallet: Address;
-    amount: Int as uint256;
-    queryId: Int as uint64;
+    amount: Int as coins;
     nonce: Int as uint64;
-    payload: Slice;
     signature: Slice;
+    payload: Slice as remaining;
 }
 
 message BankAddress{

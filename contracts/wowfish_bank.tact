@@ -45,7 +45,7 @@ contract WowfishBank with OwnableTransferable, Deployable {
                 bounce: true,
                 mode: SendRemainingValue,
                 body: TokenTransfer{ 
-                    queryId:  msg.queryId,
+                    queryId:  0,
                     amount:  msg.amount,
                     destination: msg.toWalletAddress,
                     response_destination: msg.toWalletAddress,

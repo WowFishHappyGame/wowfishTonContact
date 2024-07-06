@@ -26,7 +26,6 @@ message(0xd53276db) TokenExcesses {
 message Withdraw{
     bankWallet: Address;
     toWalletAddress: Address;
-    amount: Int as uint256;
-    queryId: Int as uint64;
+    amount: Int as coins;
     payload: Slice as remaining;
 }

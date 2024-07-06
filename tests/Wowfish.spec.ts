@@ -140,12 +140,11 @@ describe("withdraw", ()=>{
             $$type:"UserWithdrawToken",
             bankWallet:walletAddress,
             amount:toNano("41"),
-            queryId:BigInt(0),
-            nonce:1720187951820129n,
-            payload:beginCell().storeStringTail("withdraw comment").endCell(),
+            nonce:1720236737659762n,
+            payload:beginCell().storeUint(0, 32).storeStringTail("withdraw commentssssssssssssssssssssssssssssss").endCell(),
             //payload: comment("withdraw comment"),
             signature:beginCell().storeBuffer(
-                Buffer.from("d7923264437cf93aea6c11859a2be296ce7768d18046c5ae0b16b2b0b6e81c0fdd8e6f9208b8aabff66527b665f34b509e4937cae7c1b524b5f66e748c6f8908", 'hex')
+                Buffer.from("1aa008f656c0b038d2258c3ccb7ba5580ba940c3af28a35a5f3a26588d3d4dccc0cfbc5a3b07af6ced7b2cfdaf9af224c1c3e3d7dfa8e926b5d214c119d80b02", 'hex')
             ).endCell()
         })
 
