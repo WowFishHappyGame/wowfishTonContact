@@ -7,7 +7,7 @@ export async function run(provider: NetworkProvider) {
 
      //console.log("content", content)
 
-    const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQB1ygejEd6q3HQ6I2BqGXCr-hCcMl8AmkH8nuBn-yQoszCW")
+    const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQDKxNKtV3SCjXaeVEg41DdApfrak8FUa0NkvaWyueXPheu3")
     ));
 
     // const jetton_token = provider.open(SampleJetton.fromAddress(Address.parse("EQB1ygejEd6q3HQ6I2BqGXCr-hCcMl8AmkH8nuBn-yQoszCW")
@@ -28,12 +28,12 @@ export async function run(provider: NetworkProvider) {
         },
         {
             $$type:"Mint",
-            amount: BigInt("41000000000000000"),
+            amount: BigInt("1000000000000"),
             //receiver:Address.parse("UQAU_LmEvt-EpjoE3D15HTZK_9_FwPHDC7fwHyL0aYajxEH7")
 
             //receiver:Address.parse("UQBUo1yw9uUk-9Zwu91W4ydksuPVuWasxC_GjZjms0WhzN5R")
 
-            receiver:Address.parse("EQD3gdA-wuqipxnB3wcCLyvEbhPwh9T7L9Avyw-Db4HZxZ2p")
+            receiver:Address.parse("EQDHX3nPCPd23DYMqYqXf4xuaM6H1oeOCOytT5FD9WKhtOGN")
         }
     );
 

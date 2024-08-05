@@ -20,7 +20,7 @@ export async function run(provider: NetworkProvider) {
      //console.log("content", content)
 
     const jetton_token = provider.open(await SampleJetton.fromInit(owner,
-        new Cell(), BigInt(100000000000000000)
+        new Cell(), BigInt(10000000000000000000)
     ));
     //100000000000
     //1000000100n
