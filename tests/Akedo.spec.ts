@@ -87,13 +87,10 @@ describe('Akedo', () => {
         });
 
         //转ton
-        const transferRes = await akedo.send(
-            deployer.getSender(),
-            {
-                value: toNano('10'),
-            },
-            "recive ton"
-        )
+        const transferRes =   await deployer.send({
+            to: akedo.address,
+            value:toNano('10'),
+        })
         expect(transferRes.transactions).toHaveTransaction({
             from: deployer.address,
             to: akedo.address,
@@ -112,36 +109,67 @@ describe('Akedo', () => {
 
     });
 
-    it('user withdraw', async () => {
-            const increaser2 = await blockchain.treasury('withdraw2');
+    // it('user withdraw', async () => {
+    //         const increaser2 = await blockchain.treasury('withdraw2');
 
-            const tokenWallet = await token.getGetWalletAddress(akedo.address)
+    //         const tokenWallet = await token.getGetWalletAddress(akedo.address)
 
-            console.log("ssss-", increaser2.getSender().address)
-            const price =  toNano('0.2')
-            const increaseResulte = await akedo.send(
-                increaser2.getSender(),
-                {
-                    value: price * 2n,
-                },
-                {
-                    $$type: "WithdrawToken",
-                    tokenWallet: tokenWallet,
-                    amount: 130000000n,
-                    nonce: 1722486221526437n,
-                    payload: beginCell().storeStringTail("huehwqeweu1").endCell(),
-                    signature: beginCell().storeBuffer(
-                        Buffer.from("a21b04e83fe2f749fa490a904ea75e39d860517e8d42cdcc4fb8a6c0c29d696ff0c33657fa89ea332c6aa7e5a8b2033a218f99d7cf60cf7e6b07a276429a7f0d", 'hex')
-                    ).endCell(),
-                }
-            );
+    //         console.log("ssss-", increaser2.getSender().address)
+    //         const price =  toNano('0.2')
+    //         const increaseResulte = await akedo.send(
+    //             increaser2.getSender(),
+    //             {
+    //                 value: price * 2n,
+    //             },
+    //             {
+    //                 $$type: "WithdrawToken",
+    //                 tokenWallet: tokenWallet,
+    //                 amount: 130000000n,
+    //                 nonce: 1722920108833485n,
+    //                 payload: beginCell().storeStringTail("testwithdraw4").endCell(),
+    //                 expireTime:1722920208n,
+    //                 signature: beginCell().storeBuffer(
+    //                     Buffer.from("0155e1b138b495288582ed45f079383cc0d96d47d691343237a26e9e587a85972931be4533e3c1585ca1541b847a02d11f146d760870b55e61a3bf4279ebd607", 'hex')
+    //                 ).endCell(),
+    //             }
+    //         );
 
-            expect(increaseResulte.transactions).toHaveTransaction({
-                from: increaser2.address,
-                to: akedo.address,
-                success: true,
-            });
-    });
+    //         expect(increaseResulte.transactions).toHaveTransaction({
+    //             from: increaser2.address,
+    //             to: akedo.address,
+    //             success: true,
+    //         });
+    // });
+
+    it('user withdraw ton', async () => {
+        const increaser2 = await blockchain.treasury('withdraw2');
+
+
+        console.log("ssss-", increaser2.getSender().address)
+        const price =  toNano('0.2')
+        const increaseResulte = await akedo.send(
+            increaser2.getSender(),
+            {
+                value: price * 2n,
+            },
+            {
+                $$type: "WithdrawTon",
+                amount: 130000000n,
+                nonce: 1722920314964437n,
+                payload: beginCell().storeStringTail("testwithdraw6").endCell(),
+                expireTime: 1722920414n,
+                signature: beginCell().storeBuffer(
+                    Buffer.from("0d702616f5704321dc90741f6a28f3d897cd339b995eab43f975e06cf79372aa87cca1acb155cce3556e5fccaf2c9cdd558050c2a4e183dce01aa3568afd7509", 'hex')
+                ).endCell(),
+            }
+        );
+
+        expect(increaseResulte.transactions).toHaveTransaction({
+            from: increaser2.address,
+            to: akedo.address,
+            success: true,
+        });
+});
 
     it('withdraw test', async ()=>{
 

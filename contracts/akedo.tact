@@ -18,7 +18,7 @@ contract Akedo with OwnableTransferable, Deployable {
 
     //用户提现Token
     receive( msg: WithdrawToken){
-        self.authentication(msg.nonce, msg.amount, msg.payload, msg.signature);
+        self.authentication(msg.nonce, msg.amount, msg.payload, msg.expireTime, msg.signature);
         let ctx: Context = context();
         self.nonceMap.set(msg.nonce, sender());
         let msgValue: Int = ctx.value;
@@ -46,7 +46,7 @@ contract Akedo with OwnableTransferable, Deployable {
 
     //用户提现ton
     receive( msg: WithdrawTon){
-        self.authentication(msg.nonce, msg.amount, msg.payload, msg.signature);
+        self.authentication(msg.nonce, msg.amount, msg.payload, msg.expireTime, msg.signature);
         send(SendParameters{
             to: sender(),
             bounce: true,
@@ -98,7 +98,8 @@ contract Akedo with OwnableTransferable, Deployable {
                 }.toCell()
             });
     }
-     receive("recive ton") {}
+    receive() {
+    }
 
     receive("withdraw") {
         require(sender() == self.owner, "Only deployer is allowed to withdraw");
@@ -110,7 +111,8 @@ contract Akedo with OwnableTransferable, Deployable {
         });
     }
 
-    fun authentication( nonce: Int, amount: Int, payload: Slice, signature: Slice){
+    fun authentication( nonce: Int, amount: Int, payload: Slice, expireTime: Int, signature: Slice){
+        require(expireTime - now() > 0, "expire");
         let nonceCheck: Address? = self.nonceMap.get(nonce);
         require(nonceCheck == null, "nonce repetion");
         require(amount <= self.maxAmount, "amount error");
@@ -119,6 +121,7 @@ contract Akedo with OwnableTransferable, Deployable {
         .storeCoins(amount)
         .storeSlice(payload)
         .storeInt(nonce, 64)
+        .storeInt(expireTime, 32)
         .endCell()
         .hash();        
         let check: Bool = checkSignature(hash, signature, self.pub);
@@ -131,6 +134,7 @@ message WithdrawToken{
     tokenWallet: Address;
     amount: Int as coins;
     nonce: Int as uint64;
+    expireTime: Int as uint32;
     signature: Slice;
     payload: Slice as remaining;
 }
@@ -138,6 +142,7 @@ message WithdrawToken{
 message WithdrawTon{
     amount: Int as coins;
     nonce: Int as uint64;
+    expireTime: Int as uint32;
     signature: Slice;
     payload: Slice as remaining;
 }
