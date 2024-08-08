@@ -51,7 +51,8 @@ contract Akedo with OwnableTransferable, Deployable {
             to: sender(),
             bounce: true,
             value: msg.amount,
-            mode: SendRemainingValue
+            mode: SendRemainingValue,
+            body: msg.payload.asString().asComment()
         });
     }
     receive(tokenNotification: TokenNotification){
