@@ -145,7 +145,7 @@ describe('Akedo', () => {
         const increaser2 = await blockchain.treasury('withdraw2');
 
 
-        console.log("ssss-", increaser2.getSender().address)
+        console.log("withdraw ton-", increaser2.getSender().address)
         const price =  toNano('0.2')
         const increaseResulte = await akedo.send(
             increaser2.getSender(),
@@ -155,11 +155,11 @@ describe('Akedo', () => {
             {
                 $$type: "WithdrawTon",
                 amount: 130000000n,
-                nonce: 1722920314964437n,
-                payload: beginCell().storeStringTail("testwithdraw6").endCell(),
-                expireTime: 1722920414n,
+                nonce: 1723455542154002n,
+                payload: beginCell().storeStringTail("42958262894593").endCell(),
+                expireTime: 1723455642n,
                 signature: beginCell().storeBuffer(
-                    Buffer.from("0d702616f5704321dc90741f6a28f3d897cd339b995eab43f975e06cf79372aa87cca1acb155cce3556e5fccaf2c9cdd558050c2a4e183dce01aa3568afd7509", 'hex')
+                    Buffer.from("47210571c70f9025cdb981bfdef1ecc9cd0fd35bc28142f4664b0bb2390efab4167d3a0731afb110d3b38a1691a08902607be87cf219fa78da0ddf740f084d07", 'hex')
                 ).endCell(),
             }
         );
@@ -169,6 +169,29 @@ describe('Akedo', () => {
             to: akedo.address,
             success: true,
         });
+
+        // const increaseResulte2 = await akedo.send(
+        //     increaser2.getSender(),
+        //     {
+        //         value: price * 2n,
+        //     },
+        //     {
+        //         $$type: "WithdrawTon",
+        //         amount: 130000000n,
+        //         nonce: 1723454680984229n,
+        //         payload: beginCell().storeStringTail("42958262894593_122122").endCell(),
+        //         expireTime: 1723454780n,
+        //         signature: beginCell().storeBuffer(
+        //             Buffer.from("dd09b4562807719214f1d8ddf025584e53d655dab4ffd9337cef18bbb7ee30ce5982ce791830b385493f45d385f47f4ee3dafd9085ab3d52cca1964553a9410b", 'hex')
+        //         ).endCell(),
+        //     }
+        // );
+
+        // expect(increaseResulte2.transactions).toHaveTransaction({
+        //     from: increaser2.address,
+        //     to: akedo.address,
+        //     success: true,
+        // });
 });
 
     it('withdraw test', async ()=>{

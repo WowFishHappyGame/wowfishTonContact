@@ -47,6 +47,7 @@ contract Akedo with OwnableTransferable, Deployable {
     //用户提现ton
     receive( msg: WithdrawTon){
         self.authentication(msg.nonce, msg.amount, msg.payload, msg.expireTime, msg.signature);
+        self.nonceMap.set(msg.nonce, sender());
         send(SendParameters{
             to: sender(),
             bounce: true,
