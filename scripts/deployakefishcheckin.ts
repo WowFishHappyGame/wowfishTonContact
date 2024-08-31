@@ -1,18 +1,19 @@
 import { Address, Cell, toNano } from '@ton/core';
-import { Akedo } from '../wrappers/Akedo';
+import { AkeFishCheckin } from '../wrappers/AkeFishCheckin';
 import { NetworkProvider } from '@ton/blueprint';
 
 export async function run(provider: NetworkProvider) {
    
  
-    const akedo = provider.open(await Akedo.fromInit(BigInt(process.env.Key as string) ));
+    const akefishCheckin = provider.open(await AkeFishCheckin.fromInit());
     //100000000000
     //1000000100n
+    console.log( toNano("15"))
 
-    await akedo.send(
+    await akefishCheckin.send(
         provider.sender(),
         {
-            value: toNano('0.05'),
+            value: toNano('0.005'),
         },
         {
             $$type: 'Deploy',
@@ -20,9 +21,7 @@ export async function run(provider: NetworkProvider) {
         }
     );
 
-    await provider.waitForDeploy(akedo.address);
-
-    console.log("akedo address",akedo.address )
+    console.log("akefishCheckin address",akefishCheckin.address )
 
     // run methods on `wowfishBank`
 }

@@ -5,22 +5,21 @@ import { NetworkProvider } from '@ton/blueprint';
 export async function run(provider: NetworkProvider) {
    
  
-    const akedo = provider.open(await Akedo.fromInit(BigInt(process.env.Key as string) ));
+    const akedo = provider.open(Akedo.fromAddress(Address.parse("EQCmj-Gk7B-AwCr1hPZ_JmAouoKGDAA1d1tuKkT98u3gUPRn")));
     //100000000000
     //1000000100n
+    console.log( toNano("15"))
 
     await akedo.send(
         provider.sender(),
         {
-            value: toNano('0.05'),
+            value: toNano('0.005'),
         },
         {
-            $$type: 'Deploy',
-            queryId: 0n,
+            $$type: "MaxWithAmount",
+            amount: toNano("15"),
         }
     );
-
-    await provider.waitForDeploy(akedo.address);
 
     console.log("akedo address",akedo.address )
 
