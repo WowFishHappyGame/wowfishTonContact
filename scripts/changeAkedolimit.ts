@@ -17,7 +17,7 @@ export async function run(provider: NetworkProvider) {
         },
         {
             $$type: "MaxWithAmount",
-            amount: toNano("15"),
+            amount: toNano("50"),
         }
     );
 
